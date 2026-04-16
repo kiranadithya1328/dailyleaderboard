@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+  <title>Admin Dashboard | DK's Badminton</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      color: #f5fbff;
+      background: radial-gradient(circle at 0% 10%, #0a0f1e, #03060c);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 70% 30%, rgba(0, 255, 170, 0.06), transparent 55%),
+                  radial-gradient(circle at 20% 80%, rgba(0, 183, 255, 0.05), transparent 50%);
+      animation: slowBgDrift 16s infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes slowBgDrift {
+      0% { opacity: 0.4; transform: scale(1);}
+      100% { opacity: 0.9; transform: scale(1.05);}
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 28px;
+      backdrop-filter: blur(20px);
+      background: rgba(8, 20, 35, 0.75);
+      border-bottom: 1px solid rgba(0, 255, 200, 0.25);
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .logo-sm {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px #6bffb3);
+    }
+    .top-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 10px 20px;
+      border-radius: 60px;
+      background: rgba(0, 255, 200, 0.12);
+      border: 1px solid rgba(0, 255, 200, 0.35);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .btn-premium, .btn {
+      padding: 10px 22px;
+      border-radius: 40px;
+      font-weight: 700;
+      text-decoration: none;
+      background: linear-gradient(105deg, rgba(0, 180, 220, 0.9), rgba(0, 255, 170, 0.75));
+      color: white;
+      border: none;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+    }
+    .btn-premium:hover, .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 22px rgba(0, 255, 170, 0.3);
+    }
+    .btn.ghost {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .wrap {
+      padding: 32px 28px;
+      max-width: 1600px;
+      margin: auto;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: rgba(20, 35, 60, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 255, 200, 0.2);
+      border-radius: 32px;
+      padding: 24px 20px;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      border-color: #6bffb3;
+    }
+    .stat-card h3 {
+      font-size: 38px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #6bffb3);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .card {
+      background: rgba(12, 25, 45, 0.55);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 255, 200, 0.2);
+      border-radius: 32px;
+      padding: 24px;
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      border-color: rgba(107, 255, 179, 0.5);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 24px;
+    }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    @media (max-width: 1000px) {
+      .span-4, .span-6, .span-8, .span-12 { grid-column: span 12; }
+      .wrap { padding: 20px; }
+    }
+    input, select {
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid rgba(0, 255, 200, 0.3);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      font-size: 15px;
+      outline: none;
+      transition: 0.2s;
+    }
+    select {
+      background: rgba(20, 35, 55, 0.95);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236bffb3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+    select option {
+      background: #0f1f2f;
+      color: white;
+      padding: 12px;
+    }
+    input:focus, select:focus {
+      border-color: #6bffb3;
+      box-shadow: 0 0 0 3px rgba(107,255,179,0.2);
+    }
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .muted {
+      color: #b8d8ff;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 255, 200, 0.12);
+    }
+    th {
+      color: #bbf0ff;
+      font-weight: 600;
+    }
+    tr:hover {
+      background: rgba(0, 255, 170, 0.05);
+    }
+    .danger {
+      background: linear-gradient(105deg, #ff4d6d, #ff1e3c);
+    }
+    .green {
+      background: linear-gradient(105deg, #00d89a, #00b87a);
+    }
+    .msg {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #aaffdd;
+    }
+    .error {
+      color: #ffb3b3;
+    }
+    .list-actions button {
+      margin-right: 8px;
+      padding: 6px 14px;
+      border-radius: 30px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .list-actions .del {
+      background: #ff4d6d;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <img class="logo-sm" src="Dklogo.jpeg" alt="logo" onerror="this.src='https://placehold.co/40x40/1e2a3a/6bffb3?text=🏸'">
+      <span>🏸 Admin Control</span>
+    </div>
+    <div class="top-right">
+      <div class="chip" id="welcomeUser">Admin</div>
+      <button class="btn ghost" onclick="location.href='leaderboard.html'">📊 Leaderboard</button>
+      <button class="btn ghost" id="logoutBtn">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat-card"><h3 id="totalPlayers">0</h3><p>Total Players</p></div>
+      <div class="stat-card"><h3 id="totalManagers">0</h3><p>Managers</p></div>
+      <div class="stat-card"><h3 id="topScore">0</h3><p>Highest Score</p></div>
+    </div>
+
+    <div class="grid">
+      <div class="card span-4">
+        <h3>➕ Add Player</h3>
+        <div class="muted">Create new player profile</div>
+        <input id="addName" placeholder="Full name">
+        <div class="actions"><button class="btn green" id="addPlayerBtn">Add Player</button></div>
+        <div class="msg" id="addPlayerMsg"></div>
+      </div>
+
+      <div class="card span-4">
+        <h3>👥 Create Manager</h3>
+        <div class="muted">Grant manager access</div>
+        <input id="managerUsername" placeholder="Manager username">
+        <input id="managerPassword" type="password" placeholder="Password">
+        <div class="actions"><button class="btn-premium" id="createManagerBtn">Create Manager</button></div>
+        <div class="msg" id="managerMsg"></div>
+      </div>
+
+      <div class="card span-4">
+        <h3>⚙️ Match Points</h3>
+        <div class="muted">Win points configuration</div>
+        <input id="p11Win" type="number" placeholder="11-point win">
+        <input id="p15Win" type="number" placeholder="15-point win">
+        <input id="p21Win" type="number" placeholder="21-point win">
+        <input id="p30Win" type="number" placeholder="30-point win">
+
+        <div class="muted" style="margin-top:18px;">Loss points configuration</div>
+        <input id="p11Loss" type="number" placeholder="11-point loss">
+        <input id="p15Loss" type="number" placeholder="15-point loss">
+        <input id="p21Loss" type="number" placeholder="21-point loss">
+        <input id="p30Loss" type="number" placeholder="30-point loss">
+
+        <div class="actions"><button class="btn green" id="saveSettingsBtn">Save Settings</button></div>
+        <div class="msg" id="settingsMsg"></div>
+      </div>
+
+      <div class="card span-6">
+        <h3>✏️ Edit Player Data</h3>
+        <div class="muted">Full manual edit</div>
+        <select id="editPlayerSelect"><option value="">-- Select player --</option></select>
+        <input id="editName" placeholder="Name">
+        <input id="editPL" type="number" placeholder="PL">
+        <input id="editW" type="number" placeholder="W">
+        <input id="editL" type="number" placeholder="L">
+        <input id="editScore" type="number" placeholder="Score">
+        <div class="actions">
+          <button class="btn green" id="updatePlayerBtn">Update</button>
+          <button class="btn danger" id="deletePlayerBtn">Delete</button>
+        </div>
+        <div class="msg" id="editMsg"></div>
+      </div>
+
+      <div class="card span-6">
+        <h3>🎯 Manual Points Adjustment</h3>
+        <div class="muted">Add or subtract bonus points</div>
+        <select id="manualPlayerSelect"><option value="">-- Select player --</option></select>
+        <input id="manualPoints" type="number" placeholder="Points (+ or -)">
+        <input id="manualReason" placeholder="Reason (optional)">
+        <div class="actions"><button class="btn-premium" id="manualBtn">Apply Points</button></div>
+        <div class="msg" id="manualMsg"></div>
+      </div>
+
+      <div class="card span-6">
+        <h3>👨‍💼 Managers List</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Username</th><th>Role</th><th>Action</th></tr>
+            </thead>
+            <tbody id="managersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <h3>🏸 Players Ranking Preview</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>PL</th><th>W</th><th>L</th><th>Score</th></tr>
+            </thead>
+            <tbody id="playersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+      query, where, orderBy, onSnapshot, limit, increment, serverTimestamp
+    } from './firebase-init.js';
+
+    if (sessionStorage.getItem("isLoggedIn") !== "true" || sessionStorage.getItem("role") !== "admin") {
+      location.href = "admin-login.html";
+    }
+
+    document.getElementById('welcomeUser').textContent = "👑 Admin";
+    document.getElementById('logoutBtn').onclick = () => {
+      sessionStorage.clear();
+      location.href = "index.html";
+    };
+
+    const addPlayerMsg = document.getElementById('addPlayerMsg');
+    const managerMsg = document.getElementById('managerMsg');
+    const settingsMsg = document.getElementById('settingsMsg');
+    const editMsg = document.getElementById('editMsg');
+    const manualMsg = document.getElementById('manualMsg');
+
+    let playersCache = [];
+
+    function setMsg(el, text, isError=false) {
+      el.textContent = text;
+      el.className = "msg" + (isError ? " error" : "");
+    }
+
+    async function loadSettings() {
+      const ref = doc(db, "settings", "matchPoints");
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const d = snap.data();
+        document.getElementById('p11Win').value = d.p11Win ?? 2;
+        document.getElementById('p15Win').value = d.p15Win ?? 3;
+        document.getElementById('p21Win').value = d.p21Win ?? 5;
+        document.getElementById('p30Win').value = d.p30Win ?? 7;
+
+        document.getElementById('p11Loss').value = d.p11Loss ?? -1;
+        document.getElementById('p15Loss').value = d.p15Loss ?? -1;
+        document.getElementById('p21Loss').value = d.p21Loss ?? -2;
+        document.getElementById('p30Loss').value = d.p30Loss ?? -3;
+      }
+    }
+
+    async function saveSettings() {
+      const p11Win = Number(document.getElementById('p11Win').value);
+      const p15Win = Number(document.getElementById('p15Win').value);
+      const p21Win = Number(document.getElementById('p21Win').value);
+      const p30Win = Number(document.getElementById('p30Win').value);
+
+      const p11Loss = Number(document.getElementById('p11Loss').value);
+      const p15Loss = Number(document.getElementById('p15Loss').value);
+      const p21Loss = Number(document.getElementById('p21Loss').value);
+      const p30Loss = Number(document.getElementById('p30Loss').value);
+
+      if ([p11Win,p15Win,p21Win,p30Win,p11Loss,p15Loss,p21Loss,p30Loss].some(v => Number.isNaN(v))) {
+        setMsg(settingsMsg, "Enter all point values.", true);
+        return;
+      }
+
+      try {
+        await updateDoc(doc(db, "settings", "matchPoints"), {
+          p11Win, p11Loss,
+          p15Win, p15Loss,
+          p21Win, p21Loss,
+          p30Win, p30Loss
+        });
+        setMsg(settingsMsg, "✅ Settings updated.");
+      } catch {
+        setMsg(settingsMsg, "Error updating settings.", true);
+      }
+    }
+
+    async function addPlayer() {
+      const name = document.getElementById('addName').value.trim();
+      if (!name) {
+        setMsg(addPlayerMsg, "Enter player name.", true);
+        return;
+      }
+      try {
+        const existsQ = query(collection(db, "players"), where("name", "==", name), limit(1));
+        const existsSnap = await getDocs(existsQ);
+        if (!existsSnap.empty) {
+          setMsg(addPlayerMsg, "Player exists.", true);
+          return;
+        }
+        await addDoc(collection(db, "players"), {
+          name,
+          pl: 0,
+          w: 0,
+          l: 0,
+          score: 0,
+          createdAt: serverTimestamp()
+        });
+        document.getElementById('addName').value = "";
+        setMsg(addPlayerMsg, "Player added.");
+      } catch {
+        setMsg(addPlayerMsg, "Error adding player.", true);
+      }
+    }
+
+    async function createManager() {
+      const username = document.getElementById('managerUsername').value.trim();
+      const password = document.getElementById('managerPassword').value.trim();
+      if (!username || !password) {
+        setMsg(managerMsg, "Fill both fields.", true);
+        return;
+      }
+      try {
+        const q = query(collection(db, "users"), where("username", "==", username), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setMsg(managerMsg, "Username taken.", true);
+          return;
+        }
+        await addDoc(collection(db, "users"), {
+          username,
+          password,
+          role: "manager",
+          createdAt: serverTimestamp()
+        });
+        document.getElementById('managerUsername').value = "";
+        document.getElementById('managerPassword').value = "";
+        setMsg(managerMsg, "Manager created.");
+      } catch {
+        setMsg(managerMsg, "Error creating manager.", true);
+      }
+    }
+
+    function fillPlayerSelects(players) {
+      const editSelect = document.getElementById('editPlayerSelect');
+      const manualSelect = document.getElementById('manualPlayerSelect');
+      editSelect.innerHTML = '<option value="">-- Select player --</option>';
+      manualSelect.innerHTML = '<option value="">-- Select player --</option>';
+
+      players.forEach(p => {
+        editSelect.innerHTML += `<option value="${p.id}" style="color: white; background: #0f1f2f;">${p.name}</option>`;
+        manualSelect.innerHTML += `<option value="${p.id}" style="color: white; background: #0f1f2f;">${p.name}</option>`;
+      });
+
+      document.getElementById('totalPlayers').textContent = players.length;
+      document.getElementById('topScore').textContent = players.length ? Math.max(...players.map(p => Number(p.score || 0))) : 0;
+    }
+
+    function renderPlayers(players) {
+      const body = document.getElementById('playersBody');
+      body.innerHTML = "";
+      players.forEach(p => {
+        body.innerHTML += `<tr><td>${p.name}</td><td>${p.pl}</td><td>${p.w}</td><td>${p.l}</td><td><strong>${p.score}</strong></td></tr>`;
+      });
+    }
+
+    async function loadManagersOnce() {
+      const q = query(collection(db, "users"), where("role", "==", "manager"));
+      const snap = await getDocs(q);
+      const body = document.getElementById('managersBody');
+      body.innerHTML = "";
+      let count = 0;
+
+      snap.forEach(docSnap => {
+        count++;
+        const d = docSnap.data();
+        body.innerHTML += `<tr><td>${d.username}</td><td>manager</td><td class="list-actions"><button class="del" data-id="${docSnap.id}">Delete</button></td></tr>`;
+      });
+
+      document.getElementById('totalManagers').textContent = count;
+
+      body.querySelectorAll('.del').forEach(btn => {
+        btn.onclick = async () => {
+          if (confirm("Delete manager?")) {
+            await deleteDoc(doc(db, "users", btn.dataset.id));
+            loadManagersOnce();
+          }
+        };
+      });
+    }
+
+    document.getElementById('editPlayerSelect').addEventListener('change', e => {
+      const id = e.target.value;
+      const p = playersCache.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('editName').value = p.name;
+      document.getElementById('editPL').value = p.pl;
+      document.getElementById('editW').value = p.w;
+      document.getElementById('editL').value = p.l;
+      document.getElementById('editScore').value = p.score;
+    });
+
+    async function updatePlayerFull() {
+      const id = document.getElementById('editPlayerSelect').value;
+      if (!id) {
+        setMsg(editMsg, "Select a player.", true);
+        return;
+      }
+
+      const name = document.getElementById('editName').value.trim();
+      const pl = Number(document.getElementById('editPL').value);
+      const w = Number(document.getElementById('editW').value);
+      const l = Number(document.getElementById('editL').value);
+      const score = Number(document.getElementById('editScore').value);
+
+      if (!name || [pl,w,l,score].some(v => Number.isNaN(v))) {
+        setMsg(editMsg, "Invalid fields.", true);
+        return;
+      }
+
+      try {
+        await updateDoc(doc(db, "players", id), { name, pl, w, l, score });
+        setMsg(editMsg, "Updated.");
+      } catch {
+        setMsg(editMsg, "Error.", true);
+      }
+    }
+
+    async function deletePlayerNow() {
+      const id = document.getElementById('editPlayerSelect').value;
+      if (!id) {
+        setMsg(editMsg, "Select player.", true);
+        return;
+      }
+      if (!confirm("Delete permanently?")) return;
+
+      try {
+        await deleteDoc(doc(db, "players", id));
+        setMsg(editMsg, "Deleted.");
+      } catch {
+        setMsg(editMsg, "Error.", true);
+      }
+    }
+
+    async function manualPointsUpdate() {
+      const id = document.getElementById('manualPlayerSelect').value;
+      const pts = Number(document.getElementById('manualPoints').value);
+      if (!id || Number.isNaN(pts)) {
+        setMsg(manualMsg, "Select player & points.", true);
+        return;
+      }
+      try {
+        await updateDoc(doc(db, "players", id), { score: increment(pts) });
+        setMsg(manualMsg, "Points applied.");
+      } catch {
+        setMsg(manualMsg, "Error.", true);
+      }
+    }
+
+    document.getElementById('saveSettingsBtn').onclick = saveSettings;
+    document.getElementById('addPlayerBtn').onclick = addPlayer;
+    document.getElementById('createManagerBtn').onclick = createManager;
+    document.getElementById('updatePlayerBtn').onclick = updatePlayerFull;
+    document.getElementById('deletePlayerBtn').onclick = deletePlayerNow;
+    document.getElementById('manualBtn').onclick = manualPointsUpdate;
+
+    onSnapshot(query(collection(db, "players"), orderBy("score", "desc")), snap => {
+      playersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      fillPlayerSelects(playersCache);
+      renderPlayers(playersCache);
+    });
+
+    await loadSettings();
+    await loadManagersOnce();
+  </script>
+</body>
+</html>
