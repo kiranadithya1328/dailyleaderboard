@@ -117,6 +117,15 @@
       box-shadow: 0 12px 22px rgba(255,30,60,0.35);
     }
 
+    .btn-points {
+      background: linear-gradient(105deg, #8b5cf6, #06b6d4);
+      box-shadow: 0 5px 12px rgba(99,102,241,0.22);
+    }
+
+    .btn-points:hover {
+      box-shadow: 0 12px 22px rgba(99,102,241,0.32);
+    }
+
     .wrap {
       padding: 32px 28px;
       max-width: 1400px;
@@ -339,6 +348,24 @@
         </div>
       </div>
 
+      <div class="card span-5">
+        <h3>🎯 Bulk / Manual Points</h3>
+        <div class="muted">Add or subtract points directly</div>
+
+        <select id="bulkPlayerSelect">
+          <option value="">-- Select a player --</option>
+        </select>
+
+        <input id="bulkPoints" type="number" placeholder="Points (+ or -)">
+        <input id="bulkReason" placeholder="Reason (optional)">
+
+        <div class="actions">
+          <button class="btn btn-points" id="bulkPointsBtn">Apply Points</button>
+        </div>
+
+        <div class="msg" id="bulkMsg"></div>
+      </div>
+
       <div class="card span-12">
         <h3>📊 Players Ranking Snapshot</h3>
         <div class="table-wrap">
@@ -378,17 +405,25 @@
     };
 
     const msg = document.getElementById('msg');
+    const bulkMsg = document.getElementById('bulkMsg');
+
     let settings = {
       p11Win: 2, p11Loss: -1,
       p15Win: 3, p15Loss: -1,
       p21Win: 5, p21Loss: -2,
       p30Win: 7, p30Loss: -3
     };
+
     let currentPlayers = [];
 
     function setMsg(text, isError = false) {
       msg.textContent = text;
       msg.className = "msg" + (isError ? " error" : "");
+    }
+
+    function setBulkMsg(text, isError = false) {
+      bulkMsg.textContent = text;
+      bulkMsg.className = "msg" + (isError ? " error" : "");
     }
 
     async function loadSettings() {
@@ -494,14 +529,45 @@
       }
     }
 
+    async function applyBulkPoints() {
+      const playerId = document.getElementById('bulkPlayerSelect').value;
+      const pts = Number(document.getElementById('bulkPoints').value);
+
+      if (!playerId) {
+        setBulkMsg("Select a player.", true);
+        return;
+      }
+
+      if (Number.isNaN(pts)) {
+        setBulkMsg("Enter valid points.", true);
+        return;
+      }
+
+      try {
+        await updateDoc(doc(db, "players", playerId), {
+          score: increment(pts)
+        });
+
+        document.getElementById('bulkPoints').value = "";
+        document.getElementById('bulkReason').value = "";
+        setBulkMsg("✅ Points applied.");
+      } catch (err) {
+        console.error(err);
+        setBulkMsg("❌ Could not apply points.", true);
+      }
+    }
+
     document.getElementById('previewBtn').onclick = showPreview;
     document.getElementById('saveBtn').onclick = saveResult;
+    document.getElementById('bulkPointsBtn').onclick = applyBulkPoints;
 
     onSnapshot(query(collection(db, "players"), orderBy("score", "desc")), snap => {
       const select = document.getElementById('playerSelect');
+      const bulkSelect = document.getElementById('bulkPlayerSelect');
       const body = document.getElementById('playersBody');
 
       select.innerHTML = '<option value="">-- Select a player --</option>';
+      bulkSelect.innerHTML = '<option value="">-- Select a player --</option>';
       body.innerHTML = "";
       currentPlayers = [];
 
@@ -527,6 +593,12 @@
           </option>
         `;
 
+        bulkSelect.innerHTML += `
+          <option value="${docSnap.id}" style="color: white; background: #0f1f2f;">
+            ${playerObj.name}
+          </option>
+        `;
+
         body.innerHTML += `
           <tr>
             <td><strong>${playerObj.rank}</strong></td>
@@ -541,6 +613,7 @@
 
       if (currentPlayers.length === 0) {
         select.innerHTML = '<option value="">-- No players found --</option>';
+        bulkSelect.innerHTML = '<option value="">-- No players found --</option>';
       }
     });
 
