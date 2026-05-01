@@ -347,6 +347,18 @@
           </table>
         </div>
       </div>
+      <div class="card span-4">
+  <h3>⚠️ Reset Leaderboard</h3>
+  <div class="muted">This will reset PL, W, L and Score for all players</div>
+
+  <div class="actions">
+    <button class="btn danger" id="resetLeaderboardBtn">
+      Reset Full Leaderboard
+    </button>
+  </div>
+
+  <div class="msg" id="resetMsg"></div>
+</div>
     </div>
   </div>
 
@@ -609,7 +621,39 @@
       fillPlayerSelects(playersCache);
       renderPlayers(playersCache);
     });
+    const resetMsg = document.getElementById("resetMsg");
 
+async function resetFullLeaderboard() {
+  const confirmReset = confirm(
+    "Are you sure? This will reset PL, W, L and Score of every player to 0."
+  );
+
+  if (!confirmReset) return;
+
+  try {
+    resetMsg.textContent = "Resetting leaderboard...";
+
+    const snap = await getDocs(collection(db, "players"));
+
+    const updates = snap.docs.map(playerDoc => {
+      return updateDoc(doc(db, "players", playerDoc.id), {
+        pl: 0,
+        w: 0,
+        l: 0,
+        score: 0
+      });
+    });
+
+    await Promise.all(updates);
+
+    resetMsg.textContent = "✅ Full leaderboard reset successfully.";
+  } catch (err) {
+    console.error(err);
+    resetMsg.textContent = "❌ Reset failed: " + err.message;
+  }
+}
+
+document.getElementById("resetLeaderboardBtn").onclick = resetFullLeaderboard;
     await loadSettings();
     await loadManagersOnce();
   </script>
