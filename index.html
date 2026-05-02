@@ -204,9 +204,56 @@
       .club-header { flex-direction: column; text-align: center; }
       .btn { min-height: 68px; font-size: 16px; }
     }
+
+    #splash {
+  position: fixed;
+  inset: 0;
+  background: #08121d;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: hideSplash 0.8s ease forwards;
+  animation-delay: 2s;
+}
+
+.splash-logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  animation: logoPop 1s ease infinite alternate;
+  box-shadow: 0 0 25px #00ffc8;
+}
+
+#splash h1 {
+  margin-top: 18px;
+  color: #00ffc8;
+  font-size: 24px;
+}
+
+@keyframes logoPop {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes hideSplash {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
   </style>
 </head>
 <body>
+  <div id="splash">
+  <img src="Dklogo.jpeg" class="splash-logo">
+  <h1>DK’s Badminton Club</h1>
+</div>
   <div class="bg-ball"></div>
   <div class="bg-ring"></div>
 
@@ -236,5 +283,7 @@
       <div class="small">CHECK YOUR RANKINGS DAILY</div>
     </div>
   </div>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00ffc8">
 </body>
 </html>
