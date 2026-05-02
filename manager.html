@@ -630,47 +630,42 @@
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const createPDF = (logoImage = null) => {
-      // Header
-      pdf.setFillColor(7, 18, 35);
-      pdf.rect(0, 0, pageWidth, 42, 'F');
+    const logo = new Image();
+    logo.src = "Dklogo.jpeg";
 
-      // Logo
-      if (logoImage) {
-        pdf.addImage(logoImage, 'JPEG', 15, 7, 26, 26);
-      }
+    logo.onload = function () {
 
-      // Title
-      pdf.setFontSize(24);
+      // 🔥 HEADER
+      pdf.setFillColor(5, 20, 40);
+      pdf.rect(0, 0, pageWidth, 45, 'F');
+
+      // LOGO
+      pdf.addImage(logo, 'JPEG', 15, 8, 28, 28);
+
+      // TITLE
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(26);
       pdf.setTextColor(255, 255, 255);
-      pdf.setFont(undefined, 'bold');
-      pdf.text("DK's Badminton Club", logoImage ? 48 : 18, 18);
+      pdf.text("DK's Badminton Club", 50, 20);
 
-      pdf.setFontSize(11);
-      pdf.setTextColor(170, 255, 220);
-      pdf.setFont(undefined, 'normal');
-      pdf.text("Official Leaderboard Report", logoImage ? 48 : 18, 28);
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 255, 200);
+      pdf.text("Official Leaderboard Report", 50, 30);
 
-      // Right info
+      // RIGHT SIDE INFO
       pdf.setFontSize(9);
-      pdf.setTextColor(210, 230, 240);
-      pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 18, 18, { align: "right" });
-      pdf.text(`Total Players: ${currentPlayers.length}`, pageWidth - 18, 28, { align: "right" });
+      pdf.setTextColor(200, 220, 230);
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 20, 20, { align: "right" });
+      pdf.text(`Players: ${currentPlayers.length}`, pageWidth - 20, 28, { align: "right" });
 
-      // Accent line
+      // LINE
       pdf.setDrawColor(0, 255, 200);
-      pdf.setLineWidth(0.8);
+      pdf.setLineWidth(0.7);
       pdf.line(15, 38, pageWidth - 15, 38);
 
-      // Top 3 cards
+      // 🥇 TOP 3 CARDS
       const top3 = currentPlayers.slice(0, 3);
-      const cardY = 48;
-      const cardW = 82;
-      const cardH = 24;
-      const cardGap = 8;
-      const startX = 18;
 
-      const medals = ["GOLD", "SILVER", "BRONZE"];
       const cardColors = [
         [255, 215, 0],
         [192, 192, 192],
@@ -678,23 +673,21 @@
       ];
 
       top3.forEach((p, i) => {
-        const x = startX + i * (cardW + cardGap);
+        const x = 20 + (i * 90);
 
         pdf.setFillColor(...cardColors[i]);
-        pdf.roundedRect(x, cardY, cardW, cardH, 4, 4, 'F');
+        pdf.roundedRect(x, 50, 80, 26, 5, 5, 'F');
 
         pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(9);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(medals[i], x + 5, cardY + 7);
-
-        pdf.setFontSize(13);
-        pdf.text(`${i + 1}. ${p.name}`, x + 5, cardY + 15);
+        pdf.setFontSize(10);
+        pdf.text(["🥇", "🥈", "🥉"][i] + " " + p.name, x + 5, 60);
 
         pdf.setFontSize(9);
-        pdf.text(`Score: ${p.score} | W: ${p.w} | L: ${p.l}`, x + 5, cardY + 21);
+        pdf.text(`Score: ${p.score}`, x + 5, 68);
+        pdf.text(`W:${p.w}  L:${p.l}`, x + 5, 74);
       });
 
+      // 📊 TABLE
       const tableData = currentPlayers.map(p => [
         String(p.rank),
         p.name,
@@ -705,108 +698,76 @@
       ]);
 
       pdf.autoTable({
-        head: [['Rank', 'Player Name', 'PL', 'W', 'L', 'Score']],
+        head: [['Rank', 'Player', 'PL', 'W', 'L', 'Score']],
         body: tableData,
-        startY: top3.length ? 82 : 48,
+        startY: 85,
         theme: 'grid',
 
         styles: {
           fontSize: 10,
-          cellPadding: 3.5,
-          lineColor: [210, 225, 235],
-          lineWidth: 0.2,
-          halign: 'center',
-          valign: 'middle'
-        },
-
-        headStyles: {
-          fillColor: [8, 30, 55],
-          textColor: [0, 255, 200],
-          fontStyle: 'bold',
-          fontSize: 11,
+          cellPadding: 4,
           halign: 'center'
         },
 
-        bodyStyles: {
-          textColor: [20, 30, 40]
+        headStyles: {
+          fillColor: [10, 30, 60],
+          textColor: [0, 255, 200],
+          fontStyle: 'bold'
         },
 
         alternateRowStyles: {
-          fillColor: [240, 250, 248]
+          fillColor: [245, 250, 248]
         },
 
         columnStyles: {
-          0: { fontStyle: 'bold', halign: 'center', cellWidth: 22 },
-          1: { halign: 'left', cellWidth: 75 },
-          2: { halign: 'center', cellWidth: 28 },
-          3: { halign: 'center', cellWidth: 28 },
-          4: { halign: 'center', cellWidth: 28 },
-          5: { halign: 'center', cellWidth: 35, fontStyle: 'bold' }
+          0: { fontStyle: 'bold' },
+          1: { halign: 'left' },
+          5: { fontStyle: 'bold' }
         },
 
         didParseCell: function (data) {
           if (data.section === 'body') {
+
             const rank = data.row.index + 1;
-            const scoreCol = data.column.index === 5;
-            const scoreValue = Number(data.row.raw[5]);
+            const score = Number(data.row.raw[5]);
 
-            if (rank === 1) {
-              data.cell.styles.fillColor = [255, 248, 210];
-              data.cell.styles.fontStyle = 'bold';
-            }
+            // TOP 3 HIGHLIGHT
+            if (rank === 1) data.cell.styles.fillColor = [255, 248, 200];
+            if (rank === 2) data.cell.styles.fillColor = [235, 235, 235];
+            if (rank === 3) data.cell.styles.fillColor = [245, 220, 200];
 
-            if (rank === 2) {
-              data.cell.styles.fillColor = [238, 240, 244];
-              data.cell.styles.fontStyle = 'bold';
-            }
-
-            if (rank === 3) {
-              data.cell.styles.fillColor = [245, 226, 210];
-              data.cell.styles.fontStyle = 'bold';
-            }
-
-            if (scoreCol) {
-              if (scoreValue < 0) {
-                data.cell.styles.textColor = [220, 40, 40];
-              } else {
-                data.cell.styles.textColor = [245, 110, 0];
-              }
-              data.cell.styles.fontStyle = 'bold';
+            // NEGATIVE SCORE
+            if (data.column.index === 5 && score < 0) {
+              data.cell.styles.textColor = [220, 0, 0];
             }
           }
         },
 
         didDrawPage: function () {
-          pdf.setDrawColor(0, 180, 160);
-          pdf.setLineWidth(0.3);
-          pdf.line(15, pageHeight - 14, pageWidth - 15, pageHeight - 14);
+          pdf.setDrawColor(0, 200, 180);
+          pdf.line(15, pageHeight - 12, pageWidth - 15, pageHeight - 12);
 
           pdf.setFontSize(8);
-          pdf.setTextColor(100, 120, 130);
-          pdf.setFont(undefined, 'normal');
-          pdf.text("DK's Badminton Club • Live Ranking System", 15, pageHeight - 8);
+          pdf.setTextColor(120, 120, 120);
+
+          pdf.text("DK's Badminton Club • Live Leaderboard", 15, pageHeight - 6);
+
           pdf.text(
             `Page ${pdf.internal.getNumberOfPages()}`,
             pageWidth - 15,
-            pageHeight - 8,
+            pageHeight - 6,
             { align: "right" }
           );
         }
       });
 
-      pdf.save('dks-badminton-leaderboard.pdf');
-      setMsg("📄 Master PDF downloaded successfully!");
+      pdf.save("DK_Badminton_Leaderboard.pdf");
+      setMsg("🔥 Premium PDF downloaded!");
     };
-
-    const logo = new Image();
-    logo.src = "Dklogo.jpeg";
-
-    logo.onload = () => createPDF(logo);
-    logo.onerror = () => createPDF(null);
 
   } catch (err) {
     console.error(err);
-    setMsg("PDF generation failed: " + err.message, true);
+    setMsg("PDF error: " + err.message, true);
   }
 });
     await loadSettings();
