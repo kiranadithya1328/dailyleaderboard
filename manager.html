@@ -617,7 +617,7 @@
       }
     });
 
- document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
+    document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
   try {
     if (!currentPlayers.length) {
       setMsg("No player data to export.", true);
@@ -658,26 +658,43 @@
       pdf.setLineWidth(0.7);
       pdf.line(14, 34, pageWidth - 14, 34);
 
-      // ===== SCORECARD SUMMARY BAR =====
-      const leader = currentPlayers[0];
-      const totalMatches = currentPlayers.reduce((sum, p) => sum + Number(p.pl || 0), 0);
-      const totalWins = currentPlayers.reduce((sum, p) => sum + Number(p.w || 0), 0);
-      const totalLosses = currentPlayers.reduce((sum, p) => sum + Number(p.l || 0), 0);
+      // ===== TOP 3 CARDS =====
+      const top3 = currentPlayers.slice(0, 3);
+      const cardY = 44;
+      const cardH = 28;
+      const cardGap = 8;
+      const cardW = (pageWidth - 28 - (cardGap * 2)) / 3;
+      const startX = 14;
 
-      pdf.setFillColor(235, 245, 245);
-      pdf.roundedRect(14, 42, pageWidth - 28, 22, 3, 3, 'F');
+      const titles = ["1st Place", "2nd Place", "3rd Place"];
+      const colors = [
+        [255, 215, 0],
+        [205, 210, 218],
+        [205, 127, 50]
+      ];
 
-      pdf.setFont(undefined, 'bold');
-      pdf.setFontSize(11);
-      pdf.setTextColor(5, 14, 30);
-      pdf.text("MATCHDAY SUMMARY", 20, 51);
+      top3.forEach((p, i) => {
+        const x = startX + i * (cardW + cardGap);
 
-      pdf.setFont(undefined, 'normal');
-      pdf.setFontSize(9);
-      pdf.text(`Leader: ${leader.name} (${leader.score})`, 20, 59);
-      pdf.text(`Total Matches Played: ${totalMatches}`, 100, 59);
-      pdf.text(`Total Wins: ${totalWins}`, 175, 59);
-      pdf.text(`Total Losses: ${totalLosses}`, 230, 59);
+        pdf.setFillColor(...colors[i]);
+        pdf.roundedRect(x, cardY, cardW, cardH, 4, 4, 'F');
+
+        pdf.setDrawColor(255, 255, 255);
+        pdf.setLineWidth(0.3);
+        pdf.roundedRect(x, cardY, cardW, cardH, 4, 4, 'S');
+
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont(undefined, 'bold');
+        pdf.setFontSize(10);
+        pdf.text(titles[i], x + 6, cardY + 8);
+
+        pdf.setFontSize(14);
+        pdf.text(p.name || "-", x + 6, cardY + 17);
+
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(9);
+        pdf.text(`Score: ${p.score}   PL: ${p.pl}   W: ${p.w}   L: ${p.l}`, x + 6, cardY + 24);
+      });
 
       // ===== TABLE DATA =====
       const tableData = currentPlayers.map(p => [
@@ -693,7 +710,7 @@
       pdf.autoTable({
         head: [['RANK', 'PLAYER', 'PL', 'W', 'L', 'SCORE']],
         body: tableData,
-        startY: 72,
+        startY: 80,
         theme: 'grid',
 
         styles: {
@@ -736,23 +753,11 @@
             const rank = data.row.index + 1;
             const scoreValue = Number(data.row.raw[5]);
 
-            // Rank badge feel
-            if (data.column.index === 0) {
-              data.cell.styles.textColor = [5, 14, 30];
-              data.cell.styles.fontStyle = 'bold';
-            }
-
-            // Score column like cricket runs
             if (data.column.index === 5) {
               data.cell.styles.fontStyle = 'bold';
-              if (scoreValue < 0) {
-                data.cell.styles.textColor = [210, 30, 30];
-              } else {
-                data.cell.styles.textColor = [0, 110, 80];
-              }
+              data.cell.styles.textColor = scoreValue < 0 ? [210, 30, 30] : [0, 110, 80];
             }
 
-            // Top 3 rows subtle scorecard highlight
             if (rank === 1) {
               data.cell.styles.fillColor = [255, 248, 210];
               data.cell.styles.fontStyle = 'bold';
@@ -784,7 +789,7 @@
       });
 
       pdf.save('dks-badminton-scorecard.pdf');
-      setMsg("📄 Points table PDF downloaded!");
+      setMsg("📄 Scorecard PDF downloaded!");
     };
 
     const logo = new Image();
