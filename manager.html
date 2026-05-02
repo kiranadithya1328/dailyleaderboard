@@ -617,7 +617,7 @@
       }
     });
 
-  document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
+ document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
   try {
     if (!currentPlayers.length) {
       setMsg("No player data to export.", true);
@@ -630,64 +630,56 @@
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const logo = new Image();
-    logo.src = "Dklogo.jpeg";
+    const createPDF = (logoImage = null) => {
+      // ===== HEADER =====
+      pdf.setFillColor(5, 14, 30);
+      pdf.rect(0, 0, pageWidth, 36, 'F');
 
-    logo.onload = function () {
+      if (logoImage) {
+        pdf.addImage(logoImage, 'JPEG', 14, 6, 24, 24);
+      }
 
-      // 🔥 HEADER
-      pdf.setFillColor(5, 20, 40);
-      pdf.rect(0, 0, pageWidth, 45, 'F');
-
-      // LOGO
-      pdf.addImage(logo, 'JPEG', 15, 8, 28, 28);
-
-      // TITLE
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(26);
+      pdf.setFont(undefined, 'bold');
+      pdf.setFontSize(22);
       pdf.setTextColor(255, 255, 255);
-      pdf.text("DK's Badminton Club", 50, 20);
+      pdf.text("DK's Badminton Club", logoImage ? 44 : 16, 15);
 
-      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(10);
       pdf.setTextColor(0, 255, 200);
-      pdf.text("Official Leaderboard Report", 50, 30);
+      pdf.text("Leaderboard Scorecard", logoImage ? 44 : 16, 25);
 
-      // RIGHT SIDE INFO
       pdf.setFontSize(9);
-      pdf.setTextColor(200, 220, 230);
-      pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 20, 20, { align: "right" });
-      pdf.text(`Players: ${currentPlayers.length}`, pageWidth - 20, 28, { align: "right" });
+      pdf.setTextColor(220, 235, 245);
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 16, 14, { align: "right" });
+      pdf.text(`Players: ${currentPlayers.length}`, pageWidth - 16, 24, { align: "right" });
 
-      // LINE
       pdf.setDrawColor(0, 255, 200);
       pdf.setLineWidth(0.7);
-      pdf.line(15, 38, pageWidth - 15, 38);
+      pdf.line(14, 34, pageWidth - 14, 34);
 
-      // 🥇 TOP 3 CARDS
-      const top3 = currentPlayers.slice(0, 3);
+      // ===== SCORECARD SUMMARY BAR =====
+      const leader = currentPlayers[0];
+      const totalMatches = currentPlayers.reduce((sum, p) => sum + Number(p.pl || 0), 0);
+      const totalWins = currentPlayers.reduce((sum, p) => sum + Number(p.w || 0), 0);
+      const totalLosses = currentPlayers.reduce((sum, p) => sum + Number(p.l || 0), 0);
 
-      const cardColors = [
-        [255, 215, 0],
-        [192, 192, 192],
-        [205, 127, 50]
-      ];
+      pdf.setFillColor(235, 245, 245);
+      pdf.roundedRect(14, 42, pageWidth - 28, 22, 3, 3, 'F');
 
-      top3.forEach((p, i) => {
-        const x = 20 + (i * 90);
+      pdf.setFont(undefined, 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(5, 14, 30);
+      pdf.text("MATCHDAY SUMMARY", 20, 51);
 
-        pdf.setFillColor(...cardColors[i]);
-        pdf.roundedRect(x, 50, 80, 26, 5, 5, 'F');
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(9);
+      pdf.text(`Leader: ${leader.name} (${leader.score})`, 20, 59);
+      pdf.text(`Total Matches Played: ${totalMatches}`, 100, 59);
+      pdf.text(`Total Wins: ${totalWins}`, 175, 59);
+      pdf.text(`Total Losses: ${totalLosses}`, 230, 59);
 
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.text(["🥇", "🥈", "🥉"][i] + " " + p.name, x + 5, 60);
-
-        pdf.setFontSize(9);
-        pdf.text(`Score: ${p.score}`, x + 5, 68);
-        pdf.text(`W:${p.w}  L:${p.l}`, x + 5, 74);
-      });
-
-      // 📊 TABLE
+      // ===== TABLE DATA =====
       const tableData = currentPlayers.map(p => [
         String(p.rank),
         p.name,
@@ -697,77 +689,112 @@
         String(p.score)
       ]);
 
+      // ===== SCORECARD TABLE =====
       pdf.autoTable({
-        head: [['Rank', 'Player', 'PL', 'W', 'L', 'Score']],
+        head: [['RANK', 'PLAYER', 'PL', 'W', 'L', 'SCORE']],
         body: tableData,
-        startY: 85,
+        startY: 72,
         theme: 'grid',
 
         styles: {
           fontSize: 10,
-          cellPadding: 4,
-          halign: 'center'
+          cellPadding: 3.2,
+          lineColor: [180, 190, 200],
+          lineWidth: 0.15,
+          halign: 'center',
+          valign: 'middle'
         },
 
         headStyles: {
-          fillColor: [10, 30, 60],
+          fillColor: [5, 14, 30],
           textColor: [0, 255, 200],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          fontSize: 10.5,
+          halign: 'center'
+        },
+
+        bodyStyles: {
+          textColor: [20, 25, 35],
+          fillColor: [255, 255, 255]
         },
 
         alternateRowStyles: {
-          fillColor: [245, 250, 248]
+          fillColor: [242, 247, 250]
         },
 
         columnStyles: {
-          0: { fontStyle: 'bold' },
-          1: { halign: 'left' },
-          5: { fontStyle: 'bold' }
+          0: { cellWidth: 22, fontStyle: 'bold' },
+          1: { cellWidth: 90, halign: 'left', fontStyle: 'bold' },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 38, fontStyle: 'bold' }
         },
 
         didParseCell: function (data) {
           if (data.section === 'body') {
-
             const rank = data.row.index + 1;
-            const score = Number(data.row.raw[5]);
+            const scoreValue = Number(data.row.raw[5]);
 
-            // TOP 3 HIGHLIGHT
-            if (rank === 1) data.cell.styles.fillColor = [255, 248, 200];
-            if (rank === 2) data.cell.styles.fillColor = [235, 235, 235];
-            if (rank === 3) data.cell.styles.fillColor = [245, 220, 200];
+            // Rank badge feel
+            if (data.column.index === 0) {
+              data.cell.styles.textColor = [5, 14, 30];
+              data.cell.styles.fontStyle = 'bold';
+            }
 
-            // NEGATIVE SCORE
-            if (data.column.index === 5 && score < 0) {
-              data.cell.styles.textColor = [220, 0, 0];
+            // Score column like cricket runs
+            if (data.column.index === 5) {
+              data.cell.styles.fontStyle = 'bold';
+              if (scoreValue < 0) {
+                data.cell.styles.textColor = [210, 30, 30];
+              } else {
+                data.cell.styles.textColor = [0, 110, 80];
+              }
+            }
+
+            // Top 3 rows subtle scorecard highlight
+            if (rank === 1) {
+              data.cell.styles.fillColor = [255, 248, 210];
+              data.cell.styles.fontStyle = 'bold';
+            }
+
+            if (rank === 2) {
+              data.cell.styles.fillColor = [238, 240, 244];
+              data.cell.styles.fontStyle = 'bold';
+            }
+
+            if (rank === 3) {
+              data.cell.styles.fillColor = [245, 226, 210];
+              data.cell.styles.fontStyle = 'bold';
             }
           }
         },
 
         didDrawPage: function () {
-          pdf.setDrawColor(0, 200, 180);
-          pdf.line(15, pageHeight - 12, pageWidth - 15, pageHeight - 12);
+          pdf.setDrawColor(0, 180, 160);
+          pdf.setLineWidth(0.3);
+          pdf.line(14, pageHeight - 14, pageWidth - 14, pageHeight - 14);
 
           pdf.setFontSize(8);
-          pdf.setTextColor(120, 120, 120);
-
-          pdf.text("DK's Badminton Club • Live Leaderboard", 15, pageHeight - 6);
-
-          pdf.text(
-            `Page ${pdf.internal.getNumberOfPages()}`,
-            pageWidth - 15,
-            pageHeight - 6,
-            { align: "right" }
-          );
+          pdf.setFont(undefined, 'normal');
+          pdf.setTextColor(90, 105, 115);
+          pdf.text("DK's Badminton Club • Scorecard Report", 14, pageHeight - 8);
+          pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pageWidth - 14, pageHeight - 8, { align: "right" });
         }
       });
 
-      pdf.save("DK_Badminton_Leaderboard.pdf");
-      setMsg("🔥 Premium PDF downloaded!");
+      pdf.save('dks-badminton-scorecard.pdf');
+      setMsg("📄 Points table PDF downloaded!");
     };
+
+    const logo = new Image();
+    logo.src = "Dklogo.jpeg";
+    logo.onload = () => createPDF(logo);
+    logo.onerror = () => createPDF(null);
 
   } catch (err) {
     console.error(err);
-    setMsg("PDF error: " + err.message, true);
+    setMsg("PDF generation failed: " + err.message, true);
   }
 });
     await loadSettings();
